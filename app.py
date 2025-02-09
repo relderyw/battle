@@ -66,10 +66,10 @@ def extract_player_data(matches, player_nickname):
             continue  # Jogador não está nesta partida
         ht_casa = int(participant.get('prevPeriodsScores', [0])[0]) if participant.get('prevPeriodsScores') else 0
         ft_casa = participant['score']
-        tt_casa = ft_casa - ht_casa
+        tt_casa = ft_casa + ht_casa
         ht_fora = int(opponent.get('prevPeriodsScores', [0])[0]) if opponent.get('prevPeriodsScores') else 0
         ft_fora = opponent['score']
-        tt_fora = ft_fora - ht_fora
+        tt_fora = ft_fora + ht_fora
         pl_casa = participant['nickname'] if is_home else opponent['nickname']
         team_casa = participant['team']['token_international'] if is_home else opponent['team']['token_international']
         pl_fora = opponent['nickname'] if is_home else participant['nickname']
@@ -129,7 +129,7 @@ def fetch_all_players():
     return all_players
 
 # Interface Streamlit
-st.title("⚽ Análise de Confrontos ⚽")
+st.title("👑 RW TIPS - ANALISE BATTLE (6 / 8 MIN) 🎮")
 
 # Captura todos os jogadores disponíveis
 if 'all_players' not in st.session_state:
