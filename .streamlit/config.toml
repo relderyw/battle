@@ -1,0 +1,8 @@
+[theme]
+base = "dark"
+
+[server]
+enableCORS = true
+
+[ui]
+hideTopBar = true
