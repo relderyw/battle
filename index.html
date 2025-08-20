@@ -1,1020 +1,555 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulação de Estoque e Menor Caminho</title>
+    <title>Gerador de Placar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
             min-height: 100vh;
             padding: 20px;
-        }
-        
-        .container { 
-            max-width: 1400px; 
-            margin: 0 auto; 
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
-            height: calc(100vh - 40px);
-        }
-        
-        .sidebar {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            max-height: 100%;
-        }
-        
-        .main-content {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            gap: 40px;
+            justify-content: center;
+            align-items: center;
         }
-        
-        .canvas-container {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            flex: 1;
-            position: relative;
+
+        .form-container {
+            background: linear-gradient(145deg, rgba(0, 0, 0, 0.418), rgba(0, 0, 0, 0.616));
+            padding: 40px 35px;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 0, 0, 0.493);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.767);
+            width: 300px;
         }
-        
-        .canvas-wrapper {
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            border: 2px solid #ecf0f1;
-            border-radius: 10px;
-        }
-        
-        #canvas {
-            background: #f8f9fa;
-            cursor: crosshair;
-            width: 800px;
-            height: 500px;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .results-container {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            font-size: 2rem;
+
+        .form-title {
+            color: #fff;
+            font-size: 22px;
             font-weight: 700;
             margin-bottom: 30px;
             text-align: center;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1.5px;
+            font-family: 'Orbitron', monospace;
         }
-        
-        h2 {
-            color: #34495e;
-            font-size: 1.5rem;
-            font-weight: 600;
+
+        .form-group {
             margin-bottom: 20px;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 10px;
         }
-        
-        h3 {
-            color: #2c3e50;
-            font-size: 1.2rem;
+
+        .form-group label {
+            display: block;
+            color: #e0e0e0;
+            margin-bottom: 8px;
             font-weight: 600;
-            margin: 20px 0 10px 0;
-        }
-        
-        .input-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-        
-        .input-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        
-        input[type="text"], input[type="number"] {
-            padding: 10px 15px;
-            border: 2px solid #ecf0f1;
-            border-radius: 8px;
             font-size: 14px;
-            transition: all 0.3s ease;
-            flex: 1;
-            min-width: 120px;
+            letter-spacing: 0.3px;
         }
-        
-        input[type="text"]:focus, input[type="number"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        input[type="color"] {
-            width: 40px;
-            height: 40px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        label {
-            font-weight: 500;
-            color: #34495e;
-            white-space: nowrap;
-        }
-        
-        button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        .btn-success {
-            background: linear-gradient(45deg, #2ecc71, #27ae60);
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-        }
-        
-        .btn-success:hover {
-            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-        }
-        
-        .btn-danger:hover {
-            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-        }
-        
-        .btn-warning {
-            background: linear-gradient(45deg, #f39c12, #e67e22);
-            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
-        }
-        
-        .btn-warning:hover {
-            box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
-        }
-        
-        table {
+
+        .form-group input {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.507);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
         }
-        
-        th {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00ff88;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
         }
-        
-        td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #ecf0f1;
-            background: white;
+
+        .form-group input::placeholder {
+            color: #888;
+            font-family: 'Poppins', sans-serif;
         }
-        
-        tr:hover td {
-            background: #f8f9fa;
-        }
-        
-        .delete-btn {
-            background: #e74c3c;
-            color: white;
+
+        .btn {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #000;
             border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 18px 25px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
             cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        
-        .delete-btn:hover {
-            background: #c0392b;
-            transform: scale(1.05);
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0, 255, 136, 0.3);
+            background: linear-gradient(135deg, #00cc6a, #00aa55);
         }
-        
-        .section {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 4px solid #667eea;
+
+        .placar-card {
+            background: url('https://i.ibb.co/G4Y8sHMk/Chat-GPT-Image-21-de-abr-de-2025-16-14-34-1.png') center/cover;
+            border-radius: 20px;
+            padding: 0;
+            border: 3px solid #00ff88;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(0, 255, 136, 0.2),
+                inset 0 1px 0 rgba(0, 0, 0, 0.507);
+            width: 500px;
+            height: 280px;
+            position: relative;
+            overflow: hidden;
         }
-        
-        .result-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 600;
-            font-size: 16px;
-            line-height: 1.6;
+
+        .placar-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(0, 0, 0, 0.911) 0%, 
+                rgba(0, 0, 0, 0.836) 50%, 
+                rgba(0, 0, 0, 0.918) 100%);
+            z-index: 1;
         }
-        
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
+
+        .placar-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
         }
-        
-        .status-ready { background: #2ecc71; }
-        .status-adding { background: #f39c12; animation: pulse 1s infinite; }
-        .status-moving { background: #f1c40f; animation: pulse 1s infinite; }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+
+        .brand-section {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 3;
         }
-        
-        .info-panel {
-            background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+
+        .brand-text {
+            color: #d9ff00;
+            font-size: 26px;
+            font-weight: 700;
+            text-shadow: 
+                0 0 2px rgb(255, 255, 255),
+                1px 1px 2px rgb(0, 195, 255);
+            letter-spacing: 2px;
+            font-family: 'Orbitron', monospace;
         }
-        
-        .info-panel h4 {
-            color: #2c3e50;
+
+        .match-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .team {
+            text-align: center;
+            flex: 1;
+            max-width: 140px;
+        }
+
+        .team-name {
+            color: #fff;
+            font-size: 19px;
+            font-weight: 700;
             margin-bottom: 10px;
+            text-shadow: 
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 10px rgba(255, 255, 255, 0.3);
+            line-height: 1.2;
+            letter-spacing: 0.5px;
+            font-family: 'Poppins', sans-serif;
         }
-        
-        .info-panel p {
-            color: #34495e;
-            font-size: 14px;
-            line-height: 1.5;
+
+        .score-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
         }
-        
-        @media (max-width: 1024px) {
-            .container {
-                grid-template-columns: 1fr;
-                height: auto;
-            }
-            
-            .sidebar {
-                order: 2;
-                max-height: none;
-            }
-            
-            .main-content {
-                order: 1;
-            }
+
+        .score {
+            font-size: 76px;
+            font-weight: 900;
+            color: #ffee00;
+            text-shadow: 
+                0 0 20px rgba(255, 238, 0, 0.6),
+                0 0 40px rgba(255, 238, 0, 0.4),
+                3px 3px 6px rgba(0, 0, 0, 0.8);
+            line-height: 1;
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 2px;
         }
-        
-        @media (max-width: 768px) {
-            body { padding: 10px; }
-            
-            .input-group, .input-row {
+
+        .score-separator {
+            color: #fff;
+            font-size: 52px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .ht-section {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ht-label {
+            color: #00ff88;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .ht-score-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ht-score {
+            color: #fff;
+            font-size: 26px;
+            font-weight: 600;
+            text-shadow: 
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 8px rgba(255, 255, 255, 0.2);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .ht-separator {
+            color: #ccc;
+            font-size: 22px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        @media (max-width: 900px) {
+            body {
                 flex-direction: column;
-                align-items: stretch;
+                gap: 30px;
+                padding: 15px;
             }
             
-            input[type="text"], input[type="number"] {
-                min-width: 100%;
-            }
-            
-            button {
+            .placar-card {
                 width: 100%;
-                margin-bottom: 10px;
+                max-width: 450px;
+                height: 250px;
+            }
+
+            .form-container {
+                width: 100%;
+                max-width: 350px;
+            }
+
+            .score {
+                font-size: 62px;
+            }
+
+            .brand-text {
+                font-size: 22px;
+            }
+
+            .ht-score {
+                font-size: 22px;
+            }
+
+            .team-name {
+                font-size: 17px;
+            }
+
+            .ht-score {
+                font-size: 22px;
+            }
+
+            .ht-label {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .placar-card {
+                height: 220px;
+            }
+
+            .score {
+                font-size: 52px;
+            }
+
+            .score {
+                font-size: 50px;
+            }
+
+            .brand-text {
+                font-size: 20px;
+            }
+
+            .ht-score {
+                font-size: 18px;
+            }
+
+            .team-name {
+                font-size: 15px;
+            }
+
+            .ht-score {
+                font-size: 20px;
+            }
+
+            .ht-label {
+                font-size: 11px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <h1>Simulação de Estoque</h1>
-            
-            <div class="info-panel">
-                <h4>Status</h4>
-                <p><span class="status-indicator status-ready"></span>Sistema pronto para uso</p>
-            </div>
-            
-            <div class="section">
-                <h3>⚙️ Configurações</h3>
-                <div class="input-row">
-                    <label>Distância (m):</label>
-                    <input type="number" id="distanceBetween" value="1.20" step="0.01">
-                </div>
-                <div class="input-row">
-                    <label>Comprimento (m):</label>
-                    <input type="number" id="corridorLength" value="10" step="1">
-                </div>
-                <div class="input-row">
-                    <label>Velocidade (m/s):</label>
-                    <input type="number" id="operatorSpeed" value="1.4" step="0.1">
-                </div>
-                <button onclick="updateConfig()">Atualizar Configurações</button>
-            </div>
-            
-            <div class="section">
-                <h3>📍 Nova Localização</h3>
-                <div class="input-group">
-                    <input type="text" id="newLocationCode" placeholder="Ex: FAHE6013">
-                    <input type="color" id="locationColor" value="#667eea">
-                </div>
-                <button onclick="startAddingLocation()">Adicionar ao Mapa</button>
-            </div>
-            
-            <div class="section">
-                <h3>🔧 Mover Localização</h3>
-                <div class="input-group">
-                    <input type="text" id="moveLocationCode" placeholder="Código da localização">
-                </div>
-                <button onclick="startMovingLocation()">Mover Localização</button>
-            </div>
-            
-            <div class="section">
-                <h3>🗺️ Definir Corredores</h3>
-                <div class="input-row">
-                    <label>Corredores (ex: x1,y1 x2,y2):</label>
-                    <input type="text" id="corridorInput" placeholder="Ex: 100,0 100,500 ou 0,100 800,100">
-                </div>
-                <button onclick="setCorridors()">Definir Corredores</button>
-            </div>
-            
-            <div class="section">
-                <h3>🔍 Menor Caminho</h3>
-                <div class="input-group">
-                    <input type="text" id="itemLocations" placeholder="Ex: FAHE6013,FAHG6024">
-                </div>
-                <button class="btn-success" onclick="calculateShortestPath()">Calcular Caminho</button>
-            </div>
-            
-            <div class="section">
-                <h3>🎨 Visualização</h3>
-                <div class="input-group">
-                    <button onclick="toggleLabels()" id="toggleButton">Exibir Rótulos</button>
-                    <input type="color" id="corridorColor" value="#ff6b6b">
-                </div>
-                <button class="btn-warning" onclick="drawCorridors()">Sinalizar Corredores</button>
-            </div>
-            
-            <div class="section">
-                <h3>🗑️ Limpeza</h3>
-                <div class="input-group">
-                    <button class="btn-danger" onclick="clearLastLocation()">Limpar Último</button>
-                    <button class="btn-danger" onclick="clearEverything()">Limpar Tudo</button>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3>🗺️ Ajustar Mapa</h3>
-                <div class="input-row">
-                    <label>Linhas:</label>
-                    <input type="number" id="addRows" value="5" min="1">
-                </div>
-                <div class="input-row">
-                    <label>Colunas:</label>
-                    <input type="number" id="addCols" value="10" min="1">
-                </div>
-                <button onclick="expandMap()">Adicionar ao Mapa</button>
-                <div class="input-row">
-                    <label>Linhas:</label>
-                    <input type="number" id="removeRows" value="5" min="1">
-                </div>
-                <div class="input-row">
-                    <label>Colunas:</label>
-                    <input type="number" id="removeCols" value="10" min="1">
-                </div>
-                <button class="btn-danger" onclick="shrinkMap()">Remover do Mapa</button>
-            </div>
-            
-            <div id="locations">
-                <h3>📋 Localizações</h3>
-                <table id="locationTable">
-                    <tr>
-                        <th>Código</th>
-                        <th>Posição</th>
-                        <th>Cor</th>
-                        <th>Ações</th>
-                    </tr>
-                </table>
-            </div>
+    <div class="form-container">
+        <div class="form-title">⚽ Gerador de Placar</div>
+        
+        <div class="form-group">
+            <label>🏠 Time da Casa:</label>
+            <input type="text" id="playerHome" value="Manchester City" placeholder="Ex: Manchester City">
+        </div>
+
+        <div class="form-group">
+            <label>🥅 Placar Casa:</label>
+            <input type="number" id="scoreHome" value="2" min="0" max="20">
+        </div>
+
+        <div class="form-group">
+            <label>✈️ Time Visitante:</label>
+            <input type="text" id="playerAway" value="Arsenal" placeholder="Ex: Arsenal">
+        </div>
+
+        <div class="form-group">
+            <label>🥅 Placar Visitante:</label>
+            <input type="number" id="scoreAway" value="1" min="0" max="20">
+        </div>
+
+        <div class="form-group">
+            <label>⏱️ HT Casa:</label>
+            <input type="number" id="htHome" value="1" min="0" max="20">
+        </div>
+
+        <div class="form-group">
+            <label>⏱️ HT Visitante:</label>
+            <input type="number" id="htAway" value="0" min="0" max="20">
+        </div>
+
+        <button class="btn" onclick="copyToClipboard()">📋 Copiar Imagem</button>
+    </div>
+
+    <div class="placar-card" id="placarCard">
+        <div class="brand-section">
+            <div class="brand-logo"></div>
+            <div class="brand-text">👑 RW TIPS 🎮</div>
         </div>
         
-        <div class="main-content">
-            <div class="canvas-container">
-                <h2>🗺️ Mapa do Estoque</h2>
-                <div class="canvas-wrapper">
-                    <canvas id="canvas" width="800" height="500"></canvas>
+        <div class="placar-content">
+            <div class="match-content">
+                <div class="team">
+                    <div class="team-name" id="displayHome">Manchester City</div>
+                </div>
+                
+                <div class="score-container">
+                    <div class="score" id="displayScoreHome">2</div>
+                    <div class="score-separator">-</div>
+                    <div class="score" id="displayScoreAway">1</div>
+                </div>
+                
+                <div class="team">
+                    <div class="team-name" id="displayAway">Arsenal</div>
                 </div>
             </div>
             
-            <div class="results-container">
-                <h3>📊 Resultado da Coleta</h3>
-                <div id="resultText" class="result-text">Aguardando cálculo...</div>
+            <div class="ht-section">
+                <div class="ht-label">1º TEMPO</div>
+                <div class="ht-score-container">
+                    <div class="ht-score" id="displayHTHome">1</div>
+                    <div class="ht-separator">-</div>
+                    <div class="ht-score" id="displayHTAway">0</div>
+                </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        let locations = new Map();
-        let corridors = [];
-        let definedCorridors = []; // Lista de corredores definidos (linhas verticais e horizontais)
-        let currentPath = [];
-        let isAdding = false;
-        let isMoving = false;
-        let tempCode = '';
-        let moveTarget = null;
-        let distanceBetween = 1.20;
-        let corridorLength = 10;
-        let gridSize = 20;
-        let lastAddedLocation = null;
-        let showLabels = false;
-        let operatorSpeed = 1.4; // Velocidade padrão em m/s
-
-        // Função para desenhar grade
-        function drawGrid() {
-            ctx.beginPath();
-            ctx.strokeStyle = '#e0e6ed';
-            for (let x = 0; x <= canvas.width; x += gridSize) {
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-            }
-            for (let y = 0; y <= canvas.height; y += gridSize) {
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-            }
-            ctx.stroke();
-            ctx.closePath();
-
-            ctx.beginPath();
-            ctx.strokeStyle = '#bdc3c7';
-            for (let x = 0; x <= canvas.width; x += gridSize * 5) {
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-            }
-            for (let y = 0; y <= canvas.height; y += gridSize * 5) {
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-            }
-            ctx.stroke();
-            ctx.closePath();
-
-            // Desenhar corredores definidos
-            ctx.strokeStyle = '#3498db';
-            ctx.lineWidth = 2;
-            definedCorridors.forEach(corridor => {
-                ctx.beginPath();
-                ctx.moveTo(corridor.x1, corridor.y1);
-                ctx.lineTo(corridor.x2, corridor.y2);
-                ctx.stroke();
-                ctx.closePath();
-            });
-        }
-
-        // Event listeners
-        canvas.addEventListener('click', (event) => {
-            if (isAdding) {
-                const rect = canvas.getBoundingClientRect();
-                const x = Math.round((event.clientX - rect.left) / gridSize) * gridSize;
-                const y = Math.round((event.clientY - rect.top) / gridSize) * gridSize;
-                if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
-                    addLocation(tempCode, x, y);
-                    isAdding = false;
-                    updateStatus('Sistema pronto para uso', 'ready');
-                }
-            } else if (isMoving && moveTarget) {
-                const rect = canvas.getBoundingClientRect();
-                const x = Math.round((event.clientX - rect.left) / gridSize) * gridSize;
-                const y = Math.round((event.clientY - rect.top) / gridSize) * gridSize;
-                if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
-                    moveLocation(moveTarget, x, y);
-                    isMoving = false;
-                    moveTarget = null;
-                    updateStatus('Sistema pronto para uso', 'ready');
-                }
-            }
-        });
-
-        canvas.addEventListener('mousemove', (event) => {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = event.clientX - rect.left;
-            const mouseY = event.clientY - rect.top;
-
-            if (!showLabels) {
-                renderCanvas();
-                locations.forEach((pos, code) => {
-                    if (Math.abs(pos.x - mouseX) < gridSize && Math.abs(pos.y - mouseY) < gridSize) {
-                        drawLocation(code, pos, true);
-                    }
-                });
-            }
-        });
-
-        function updateStatus(message, type) {
-            const statusIndicator = document.querySelector('.status-indicator');
-            const statusText = statusIndicator.nextSibling;
-            statusText.textContent = message;
-            statusIndicator.className = `status-indicator status-${type}`;
-        }
-
-        function startAddingLocation() {
-            tempCode = document.getElementById('newLocationCode').value.trim().toUpperCase();
-            if (tempCode && !locations.has(tempCode)) {
-                isAdding = true;
-                updateStatus('Clique no mapa para adicionar localização', 'adding');
-                document.getElementById('newLocationCode').value = '';
-            } else {
-                alert('Código já existe ou inválido!');
-            }
-        }
-
-        function startMovingLocation() {
-            const code = document.getElementById('moveLocationCode').value.trim().toUpperCase();
-            if (code && locations.has(code)) {
-                isMoving = true;
-                moveTarget = code;
-                updateStatus('Clique no mapa para mover a localização', 'moving');
-                document.getElementById('moveLocationCode').value = '';
-            } else {
-                alert('Código não encontrado ou inválido!');
-            }
-        }
-
-        function addLocation(code, x, y) {
-            const color = document.getElementById('locationColor').value;
-            if (code && !locations.has(code)) {
-                locations.set(code, { x, y, color });
-                lastAddedLocation = code;
-                renderCanvas();
-                renderLocations();
-            }
-        }
-
-        function moveLocation(code, x, y) {
-            if (locations.has(code)) {
-                locations.set(code, { x, y, color: locations.get(code).color });
-                renderCanvas();
-                renderLocations();
-            }
-        }
-
-        function drawLocation(code, pos, highlight = false) {
-            const size = gridSize;
-            const offset = highlight ? -2 : 0;
+        function updateDisplay() {
+            const homeTeam = document.getElementById('playerHome').value || 'Home';
+            const awayTeam = document.getElementById('playerAway').value || 'Away';
+            const homeScore = document.getElementById('scoreHome').value || '0';
+            const awayScore = document.getElementById('scoreAway').value || '0';
+            const htHome = document.getElementById('htHome').value || '0';
+            const htAway = document.getElementById('htAway').value || '0';
             
-            if (highlight) {
-                ctx.fillStyle = 'rgba(0,0,0,0.1)';
-                ctx.fillRect(pos.x + offset + 2, pos.y + offset + 2, size, size);
-            }
+            document.getElementById('displayHome').textContent = homeTeam;
+            document.getElementById('displayAway').textContent = awayTeam;
+            document.getElementById('displayScoreHome').textContent = homeScore;
+            document.getElementById('displayScoreAway').textContent = awayScore;
+            document.getElementById('displayHTHome').textContent = htHome;
+            document.getElementById('displayHTAway').textContent = htAway;
+        }
+
+        async function copyToClipboard() {
+            const btn = document.querySelector('.btn');
+            const card = document.getElementById('placarCard');
             
-            ctx.fillStyle = pos.color;
-            ctx.fillRect(pos.x + offset, pos.y + offset, size, size);
+            // Feedback visual
+            btn.textContent = '📸 Copiando...';
+            btn.disabled = true;
             
-            ctx.strokeStyle = highlight ? '#2c3e50' : '#34495e';
-            ctx.lineWidth = highlight ? 2 : 1;
-            ctx.strokeRect(pos.x + offset, pos.y + offset, size, size);
-            
-            ctx.beginPath();
-            ctx.arc(pos.x + gridSize / 2, pos.y + gridSize / 2, highlight ? 6 : 4, 0, Math.PI * 2);
-            ctx.fillStyle = highlight ? '#2c3e50' : '#34495e';
-            ctx.fill();
-            ctx.closePath();
-            
-            if ((showLabels || highlight) && code) {
-                ctx.fillStyle = '#2c3e50';
-                ctx.font = `${highlight ? 'bold ' : ''}12px Arial`;
-                ctx.fillText(code, pos.x + 2, pos.y + size + 12);
-            }
-        }
-
-        function removeLocation(locationCode) {
-            locations.delete(locationCode);
-            if (lastAddedLocation === locationCode) {
-                lastAddedLocation = Array.from(locations.keys()).pop() || null;
-            }
-            renderCanvas();
-            renderLocations();
-        }
-
-        function clearLastLocation() {
-            if (lastAddedLocation && locations.has(lastAddedLocation)) {
-                locations.delete(lastAddedLocation);
-                lastAddedLocation = Array.from(locations.keys()).pop() || null;
-                renderCanvas();
-                renderLocations();
-            } else {
-                alert('Nenhuma marcação para limpar!');
-            }
-        }
-
-        function clearEverything() {
-            locations.clear();
-            corridors = [];
-            definedCorridors = [];
-            currentPath = [];
-            lastAddedLocation = null;
-            renderCanvas();
-            renderLocations();
-            document.getElementById('resultText').innerHTML = 'Aguardando cálculo...';
-        }
-
-        function toggleLabels() {
-            showLabels = !showLabels;
-            const button = document.getElementById('toggleButton');
-            button.textContent = showLabels ? 'Ocultar Rótulos' : 'Exibir Rótulos';
-            renderCanvas();
-        }
-
-        function drawCorridors() {
-            const corridorColor = document.getElementById('corridorColor').value;
-            const locArray = Array.from(locations.entries());
-            
-            if (locArray.length < 2) {
-                alert('Adicione pelo menos duas localizações para sinalizar corredores!');
-                return;
-            }
-
-            corridors = [];
-            
-            locArray.sort((a, b) => a[1].y - b[1].y || a[1].x - b[1].x);
-
-            ctx.strokeStyle = corridorColor;
-            ctx.lineWidth = 4;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            
-            ctx.shadowColor = 'rgba(0,0,0,0.2)';
-            ctx.shadowBlur = 4;
-            ctx.shadowOffsetX = 2;
-            ctx.shadowOffsetY = 2;
-            
-            ctx.beginPath();
-            let startPos = locArray[0][1];
-            ctx.moveTo(startPos.x + gridSize / 2, startPos.y + gridSize / 2);
-            corridors.push({ x: startPos.x + gridSize / 2, y: startPos.y + gridSize / 2 });
-
-            for (let i = 1; i < locArray.length; i++) {
-                const [, currentPos] = locArray[i - 1];
-                const [, nextPos] = locArray[i];
-
-                if (currentPos.y === nextPos.y) {
-                    ctx.lineTo(nextPos.x + gridSize / 2, nextPos.y + gridSize / 2);
-                    corridors.push({ x: nextPos.x + gridSize / 2, y: nextPos.y + gridSize / 2 });
-                } else {
-                    const midX = currentPos.x + gridSize / 2;
-                    const midY = nextPos.y + gridSize / 2;
-                    ctx.lineTo(midX, currentPos.y + gridSize / 2);
-                    ctx.lineTo(midX, midY);
-                    ctx.lineTo(nextPos.x + gridSize / 2, midY);
-                    corridors.push({ x: midX, y: currentPos.y + gridSize / 2 });
-                    corridors.push({ x: midX, y: midY });
-                    corridors.push({ x: nextPos.x + gridSize / 2, y: midY });
-                }
-            }
-
-            ctx.stroke();
-            ctx.closePath();
-            
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-
-            renderCanvas();
-        }
-
-        function renderCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawGrid();
-
-            if (corridors.length > 0) {
-                ctx.strokeStyle = document.getElementById('corridorColor').value;
-                ctx.lineWidth = 4;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                
-                ctx.shadowColor = 'rgba(0,0,0,0.2)';
-                ctx.shadowBlur = 4;
-                ctx.shadowOffsetX = 2;
-                ctx.shadowOffsetY = 2;
-                
-                ctx.beginPath();
-                ctx.moveTo(corridors[0].x, corridors[0].y);
-                for (let i = 1; i < corridors.length; i++) {
-                    ctx.lineTo(corridors[i].x, corridors[i].y);
-                }
-                ctx.stroke();
-                ctx.closePath();
-                
-                ctx.shadowColor = 'transparent';
-                ctx.shadowBlur = 0;
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 0;
-            }
-
-            if (currentPath.length > 1) {
-                ctx.strokeStyle = '#e74c3c';
-                ctx.lineWidth = 3;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                
-                ctx.setLineDash([10, 5]);
-                
-                ctx.beginPath();
-                let startPos = locations.get(currentPath[0]);
-                ctx.moveTo(startPos.x + gridSize / 2, startPos.y + gridSize / 2);
-                
-                for (let i = 1; i < currentPath.length; i++) {
-                    const nextCode = currentPath[i];
-                    const nextPos = locations.get(nextCode);
-                    ctx.lineTo(nextPos.x + gridSize / 2, nextPos.y + gridSize / 2);
-                }
-                
-                ctx.stroke();
-                ctx.closePath();
-                ctx.setLineDash([]);
-            }
-
-            locations.forEach((pos, code) => {
-                drawLocation(code, pos);
-            });
-        }
-
-        function renderLocations() {
-            let html = '<tr><th>Código</th><th>Posição</th><th>Cor</th><th>Ações</th></tr>';
-            locations.forEach((pos, code) => {
-                html += `
-                    <tr>
-                        <td><strong>${code}</strong></td>
-                        <td>(${Math.round(pos.x)}, ${Math.round(pos.y)})</td>
-                        <td><div style="background-color: ${pos.color}; width: 20px; height: 20px; border-radius: 4px; display: inline-block;"></div></td>
-                        <td><button class="delete-btn" onclick="removeLocation('${code}')">×</button></td>
-                    </tr>
-                `;
-            });
-            document.getElementById('locationTable').innerHTML = html;
-        }
-
-        function updateConfig() {
-            distanceBetween = parseFloat(document.getElementById('distanceBetween').value) || 1.20;
-            corridorLength = parseFloat(document.getElementById('corridorLength').value) || 10;
-            operatorSpeed = parseFloat(document.getElementById('operatorSpeed').value) || 1.4;
-            updateStatus(`Configurações atualizadas: ${distanceBetween}m, ${corridorLength}m, ${operatorSpeed}m/s`, 'ready');
-        }
-
-        function setCorridors() {
-            const input = document.getElementById('corridorInput').value.trim();
-            definedCorridors = [];
-            const pairs = input.split(' ').map(pair => {
-                const coords = pair.split(',').map(Number);
-                if (coords.length === 2) {
-                    const x = coords[0];
-                    const y = coords[1];
-                    if (isNaN(x) || isNaN(y) || x < 0 || x > canvas.width || y < 0 || y > canvas.height) {
-                        alert('Coordenadas inválidas! Use valores entre 0 e ' + canvas.width + ' para x e 0 a ' + canvas.height + ' para y.');
-                        return null;
-                    }
-                    // Completar como linha vertical e horizontal a partir do ponto
-                    definedCorridors.push({ x1: x, y1: 0, x2: x, y2: canvas.height });
-                    definedCorridors.push({ x1: 0, y1: y, x2: canvas.width, y2: y });
-                } else if (coords.length === 4) {
-                    const [x1, y1, x2, y2] = coords;
-                    if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2) ||
-                        x1 < 0 || x1 > canvas.width || y1 < 0 || y1 > canvas.height ||
-                        x2 < 0 || x2 > canvas.width || y2 < 0 || y2 > canvas.height) {
-                        alert('Coordenadas inválidas! Use valores entre 0 e ' + canvas.width + ' para x e 0 a ' + canvas.height + ' para y.');
-                        return null;
-                    }
-                    definedCorridors.push({ x1, y1, x2, y2 });
-                } else {
-                    alert('Formato inválido! Use x1,y1 x2,y2 ou x,y para definir corredores.');
-                    return null;
-                }
-            }).filter(c => c !== null);
-
-            if (definedCorridors.length > 0) {
-                renderCanvas();
-                updateStatus('Corredores definidos com sucesso', 'ready');
-            } else {
-                updateStatus('Falha ao definir corredores', 'ready');
-            }
-        }
-
-        function calculateShortestPath() {
-            const input = document.getElementById('itemLocations').value.trim();
-            const locArray = input.split(',').map(loc => loc.trim().toUpperCase()).filter(loc => loc);
-
-            if (locArray.length < 2) {
-                document.getElementById('resultText').innerHTML = 'Por favor, informe pelo menos duas localizações.';
-                return;
-            }
-
-            const invalidLocs = locArray.filter(loc => !locations.has(loc));
-            if (invalidLocs.length > 0) {
-                document.getElementById('resultText').innerHTML = `<span style="color: #e74c3c;">Localizações inválidas:</span> ${invalidLocs.join(', ')}`;
-                return;
-            }
-
-            // Função BFS para encontrar o menor caminho
-            function bfs(startPos, endPos) {
-                const queue = [{ x: startPos.x, y: startPos.y, path: [] }];
-                const visited = new Set([`${startPos.x},${startPos.y}`]);
-
-                while (queue.length > 0) {
-                    const { x, y, path } = queue.shift();
-                    const current = { x, y };
-
-                    if (x === endPos.x && y === endPos.y) {
-                        return path.concat(current);
-                    }
-
-                    const directions = [
-                        { dx: gridSize, dy: 0 }, // Direita
-                        { dx: -gridSize, dy: 0 }, // Esquerda
-                        { dx: 0, dy: gridSize }, // Baixo
-                        { dx: 0, dy: -gridSize } // Cima
-                    ];
-
-                    for (let dir of directions) {
-                        const newX = x + dir.dx;
-                        const newY = y + dir.dy;
-                        const key = `${newX},${newY}`;
-
-                        if (newX >= 0 && newX < canvas.width && newY >= 0 && newY < canvas.height && !visited.has(key)) {
-                            visited.add(key);
-                            queue.push({ x: newX, y: newY, path: path.concat(current) });
+            try {
+                // Usar html2canvas com configurações otimizadas
+                const canvas = await html2canvas(card, {
+                    backgroundColor: '#000000',
+                    scale: 2, // Reduzido de 3 para 2 para melhor performance
+                    useCORS: true,
+                    allowTaint: false,
+                    foreignObjectRendering: false,
+                    logging: false,
+                    width: 500,
+                    height: 280,
+                    windowWidth: 500,
+                    windowHeight: 280,
+                    x: 0,
+                    y: 0,
+                    scrollX: 0,
+                    scrollY: 0,
+                    onclone: (clonedDoc) => {
+                        // Garantir que o elemento clonado mantenha o estilo correto
+                        const clonedCard = clonedDoc.getElementById('placarCard');
+                        if (clonedCard) {
+                            clonedCard.style.transform = 'none';
+                            clonedCard.style.margin = '0';
+                            clonedCard.style.position = 'relative';
                         }
                     }
-                }
-                return null; // Nenhum caminho encontrado
-            }
-
-            let minDistance = Infinity;
-            let bestPathCodes = null;
-            const allPermutations = permute(locArray);
-
-            allPermutations.forEach(path => {
-                let totalDistance = 0;
-                let fullPath = [];
-
-                for (let i = 0; i < path.length - 1; i++) {
-                    const startCode = path[i];
-                    const endCode = path[i + 1];
-                    const startPos = locations.get(startCode);
-                    const endPos = locations.get(endCode);
-
-                    const segmentPath = bfs(startPos, endPos);
-                    if (!segmentPath) {
-                        totalDistance = Infinity;
-                        break;
-                    }
-
-                    fullPath = fullPath.concat(segmentPath);
-                    const dx = Math.abs(endPos.x - startPos.x);
-                    const dy = Math.abs(endPos.y - startPos.y);
-                    totalDistance += (dx + dy) / gridSize * distanceBetween;
-                }
-
-                if (totalDistance < minDistance && totalDistance !== Infinity) {
-                    minDistance = totalDistance;
-                    bestPathCodes = path;
-                    currentPath = fullPath.map(p => {
-                        const code = [...locations.entries()].find(([c, pos]) => pos.x === p.x && pos.y === p.y)?.[0];
-                        return code || null;
-                    }).filter(c => c); // Filtra códigos nulos
-                }
-            });
-
-            renderCanvas();
-
-            if (bestPathCodes) {
-                const timeEstimate = minDistance / operatorSpeed;
-                document.getElementById('resultText').innerHTML = `
-                    <div style="margin-bottom: 10px;">
-                        <strong>Menor Caminho:</strong><br>
-                        ${bestPathCodes.join(' → ')}
-                    </div>
-                    <div>
-                        <strong>Distância Total:</strong> ${minDistance.toFixed(2)} metros
-                    </div>
-                    <div style="margin-top: 10px; font-size: 14px; color: #7f8c8d;">
-                        Tempo estimado: ${timeEstimate.toFixed(2)} segundos
-                    </div>
-                `;
-            } else {
-                document.getElementById('resultText').innerHTML = 'Nenhum caminho válido encontrado.';
-            }
-        }
-
-        function permute(arr) {
-            if (arr.length <= 1) return [arr];
-            const result = [];
-            for (let i = 0; i < arr.length; i++) {
-                const rest = permute([...arr.slice(0, i), ...arr.slice(i + 1)]);
-                for (let j = 0; j < rest.length; j++) {
-                    result.push([arr[i], ...rest[j]]);
-                }
-            }
-            return result;
-        }
-
-        function resizeCanvas() {
-            const container = document.querySelector('.canvas-container');
-            const wrapper = document.querySelector('.canvas-wrapper');
-            wrapper.style.height = `${container.clientHeight - 60}px`;
-            renderCanvas();
-        }
-
-        function expandMap() {
-            const addRows = parseInt(document.getElementById('addRows').value) || 0;
-            const addCols = parseInt(document.getElementById('addCols').value) || 0;
-            if (addRows <= 0 || addCols <= 0) {
-                alert('Por favor, insira valores positivos para linhas e colunas!');
-                return;
-            }
-
-            canvas.width += addCols * gridSize;
-            canvas.height += addRows * gridSize;
-            renderCanvas();
-        }
-
-        function shrinkMap() {
-            const removeRows = parseInt(document.getElementById('removeRows').value) || 0;
-            const removeCols = parseInt(document.getElementById('removeCols').value) || 0;
-            if (removeRows <= 0 || removeCols <= 0) {
-                alert('Por favor, insira valores positivos para linhas e colunas!');
-                return;
-            }
-
-            const newWidth = canvas.width - removeCols * gridSize;
-            const newHeight = canvas.height - removeRows * gridSize;
-            const minWidth = 25 * gridSize;
-            const minHeight = 40 * gridSize;
-
-            if (newWidth >= minWidth && newHeight >= minHeight) {
-                const adjustedLocations = new Map();
-                locations.forEach((pos, code) => {
-                    const newX = Math.max(0, Math.min(pos.x, newWidth - gridSize));
-                    const newY = Math.max(0, Math.min(pos.y, newHeight - gridSize));
-                    adjustedLocations.set(code, { x: newX, y: newY, color: pos.color });
                 });
-                locations = adjustedLocations;
-
-                canvas.width = newWidth;
-                canvas.height = newHeight;
-                renderCanvas();
-                renderLocations();
-            } else {
-                alert('O mapa não pode ser reduzido abaixo do tamanho mínimo de 25x40 grades!');
+                
+                // Converter para blob
+                canvas.toBlob(async function(blob) {
+                    try {
+                        // Verificar se a API de clipboard está disponível
+                        if (navigator.clipboard && navigator.clipboard.write) {
+                            // Copiar para clipboard
+                            await navigator.clipboard.write([
+                                new ClipboardItem({
+                                    'image/png': blob
+                                })
+                            ]);
+                            
+                            // Feedback de sucesso
+                            btn.textContent = '✅ Copiado!';
+                            btn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+                        } else {
+                            throw new Error('Clipboard API não suportada');
+                        }
+                        
+                    } catch (clipboardError) {
+                        console.error('Erro ao copiar:', clipboardError);
+                        
+                        // Fallback: criar download
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        const homeTeam = document.getElementById('playerHome').value || 'Home';
+                        const awayTeam = document.getElementById('playerAway').value || 'Away';
+                        
+                        link.href = url;
+                        link.download = `placar_${homeTeam}_vs_${awayTeam}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        
+                        btn.textContent = '📱 Baixado!';
+                        btn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+                    }
+                    
+                    // Restaurar botão
+                    setTimeout(() => {
+                        btn.textContent = '📋 Copiar Imagem';
+                        btn.style.background = 'linear-gradient(135deg, #00ff88, #00cc6a)';
+                        btn.disabled = false;
+                    }, 2000);
+                    
+                }, 'image/png', 0.95);
+                
+            } catch (error) {
+                console.error('Erro ao gerar imagem:', error);
+                alert('Erro ao gerar imagem. Tente novamente.');
+                btn.textContent = '📋 Copiar Imagem';
+                btn.style.background = 'linear-gradient(135deg, #00ff88, #00cc6a)';
+                btn.disabled = false;
             }
         }
 
-        window.addEventListener('load', resizeCanvas);
-        window.addEventListener('resize', resizeCanvas);
+        // Auto-update com throttling
+        let updateTimeout;
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(updateDisplay, 100);
+            });
+        });
 
-        renderCanvas();
-        renderLocations();
+        // Inicializar
+        updateDisplay();
+
+        // Adicionar animações suaves
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.placar-card').style.opacity = '0';
+            document.querySelector('.placar-card').style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                document.querySelector('.placar-card').style.transition = 'all 0.6s ease';
+                document.querySelector('.placar-card').style.opacity = '1';
+                document.querySelector('.placar-card').style.transform = 'translateY(0)';
+            }, 200);
+        });
     </script>
 </body>
 </html>
