@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Placar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .form-container {
+            background: linear-gradient(145deg, rgba(0, 0, 0, 0.418), rgba(0, 0, 0, 0.616));
+            padding: 40px 35px;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 0, 0, 0.493);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.767);
+            width: 300px;
+        }
+
+        .form-title {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1.5px;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.507);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00ff88;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #888;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #000;
+            border: none;
+            padding: 18px 25px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0, 255, 136, 0.3);
+            background: linear-gradient(135deg, #00cc6a, #00aa55);
+        }
+
+        .placar-card {
+            background: url('https://i.ibb.co/G4Y8sHMk/Chat-GPT-Image-21-de-abr-de-2025-16-14-34-1.png') center/cover;
+            border-radius: 20px;
+            padding: 0;
+            border: 3px solid #00ff88;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(0, 255, 136, 0.2),
+                inset 0 1px 0 rgba(0, 0, 0, 0.507);
+            width: 500px;
+            height: 280px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .placar-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(0, 0, 0, 0.911) 0%, 
+                rgba(0, 0, 0, 0.836) 50%, 
+                rgba(0, 0, 0, 0.918) 100%);
+            z-index: 1;
+        }
+
+        .placar-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        .brand-section {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 3;
+        }
+
+        .brand-text {
+            color: #d9ff00;
+            font-size: 26px;
+            font-weight: 700;
+            text-shadow: 
+                0 0 2px rgb(255, 255, 255),
+                1px 1px 2px rgb(0, 195, 255);
+            letter-spacing: 2px;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .match-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .team {
+            text-align: center;
+            flex: 1;
+            max-width: 140px;
+        }
+
+        .team-name {
+            color: #fff;
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 10px rgba(255, 255, 255, 0.3);
+            line-height: 1.2;
+            letter-spacing: 0.5px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .score-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .score {
+            font-size: 76px;
+            font-weight: 900;
+            color: #ffee00;
+            text-shadow: 
+                0 0 20px rgba(255, 238, 0, 0.6),
+                0 0 40px rgba(255, 238, 0, 0.4),
+                3px 3px 6px rgba(0, 0, 0, 0.8);
+            line-height: 1;
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 2px;
+        }
+
+        .score-separator {
+            color: #fff;
+            font-size: 52px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .ht-section {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ht-label {
+            color: #00ff88;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .ht-score-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ht-score {
+            color: #fff;
+            font-size: 26px;
+            font-weight: 600;
+            text-shadow: 
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 8px rgba(255, 255, 255, 0.2);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .ht-separator {
+            color: #ccc;
+            font-size: 22px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+                gap: 30px;
+                padding: 15px;
+            }
+            
+            .placar-card {
+                width: 100%;
+                max-width: 450px;
+                height: 250px;
+            }
+
+            .form-container {
+                width: 100%;
+                max-width: 350px;
+            }
+
+            .score {
+                font-size: 62px;
+            }
+
+            .brand-text {
+                font-size: 22px;
+            }
+
+            .ht-score {
+                font-size: 22px;
+            }
+
+            .team-name {
+                font-size: 17px;
+            }
+
+            .ht-score {
+                font-size: 22px;
+            }
+
+            .ht-label {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .placar-card {
+                height: 220px;
+            }
+
+            .score {
+                font-size: 52px;
+            }
+
+            .score {
+                font-size: 50px;
+            }
+
+            .brand-text {
+                font-size: 20px;
+            }
+
+            .ht-score {
+                font-size: 18px;
+            }
+
+            .team-name {
+                font-size: 15px;
+            }
+
+            .ht-score {
+                font-size: 20px;
+            }
+
+            .ht-label {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-title">⚽ Gerador de Placar</div>
+        
+        <div class="form-group">
+            <label>🏠 Time da Casa:</label>
+            <input type="text" id="playerHome" value="Manchester City" placeholder="Ex: Manchester City">
+        </div>
+
+        <div class="form-group">
+            <label>🥅 Placar Casa:</label>
+            <input type="number" id="scoreHome" value="2" min="0" max="20">
+        </div>
+
+        <div class="form-group">
+            <label>✈️ Time Visitante:</label>
+            <input type="text" id="playerAway" value="Arsenal" placeholder="Ex: Arsenal">
+        </div>
+
+        <div class="form-group">
+            <label>🥅 Placar Visitante:</label>
+            <input type="number" id="scoreAway" value="1" min="0" max="20">
+        </div>
+
+        <div class="form-group">
+            <label>⏱️ HT Casa:</label>
+            <input type="number" id="htHome" value="1" min="0" max="20">
+        </div>
+
+        <div class="form-group">
+            <label>⏱️ HT Visitante:</label>
+            <input type="number" id="htAway" value="0" min="0" max="20">
+        </div>
+
+        <button class="btn" onclick="copyToClipboard()">📋 Copiar Imagem</button>
+    </div>
+
+    <div class="placar-card" id="placarCard">
+        <div class="brand-section">
+            <div class="brand-logo"></div>
+            <div class="brand-text">👑 RW TIPS 🎮</div>
+        </div>
+        
+        <div class="placar-content">
+            <div class="match-content">
+                <div class="team">
+                    <div class="team-name" id="displayHome">Manchester City</div>
+                </div>
+                
+                <div class="score-container">
+                    <div class="score" id="displayScoreHome">2</div>
+                    <div class="score-separator">-</div>
+                    <div class="score" id="displayScoreAway">1</div>
+                </div>
+                
+                <div class="team">
+                    <div class="team-name" id="displayAway">Arsenal</div>
+                </div>
+            </div>
+            
+            <div class="ht-section">
+                <div class="ht-label">1º TEMPO</div>
+                <div class="ht-score-container">
+                    <div class="ht-score" id="displayHTHome">1</div>
+                    <div class="ht-separator">-</div>
+                    <div class="ht-score" id="displayHTAway">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        function updateDisplay() {
+            const homeTeam = document.getElementById('playerHome').value || 'Home';
+            const awayTeam = document.getElementById('playerAway').value || 'Away';
+            const homeScore = document.getElementById('scoreHome').value || '0';
+            const awayScore = document.getElementById('scoreAway').value || '0';
+            const htHome = document.getElementById('htHome').value || '0';
+            const htAway = document.getElementById('htAway').value || '0';
+            
+            document.getElementById('displayHome').textContent = homeTeam;
+            document.getElementById('displayAway').textContent = awayTeam;
+            document.getElementById('displayScoreHome').textContent = homeScore;
+            document.getElementById('displayScoreAway').textContent = awayScore;
+            document.getElementById('displayHTHome').textContent = htHome;
+            document.getElementById('displayHTAway').textContent = htAway;
+        }
+
+        async function copyToClipboard() {
+            const btn = document.querySelector('.btn');
+            const card = document.getElementById('placarCard');
+            
+            // Feedback visual
+            btn.textContent = '📸 Copiando...';
+            btn.disabled = true;
+            
+            try {
+                // Usar html2canvas com configurações otimizadas
+                const canvas = await html2canvas(card, {
+                    backgroundColor: '#000000',
+                    scale: 2, // Reduzido de 3 para 2 para melhor performance
+                    useCORS: true,
+                    allowTaint: false,
+                    foreignObjectRendering: false,
+                    logging: false,
+                    width: 500,
+                    height: 280,
+                    windowWidth: 500,
+                    windowHeight: 280,
+                    x: 0,
+                    y: 0,
+                    scrollX: 0,
+                    scrollY: 0,
+                    onclone: (clonedDoc) => {
+                        // Garantir que o elemento clonado mantenha o estilo correto
+                        const clonedCard = clonedDoc.getElementById('placarCard');
+                        if (clonedCard) {
+                            clonedCard.style.transform = 'none';
+                            clonedCard.style.margin = '0';
+                            clonedCard.style.position = 'relative';
+                        }
+                    }
+                });
+                
+                // Converter para blob
+                canvas.toBlob(async function(blob) {
+                    try {
+                        // Verificar se a API de clipboard está disponível
+                        if (navigator.clipboard && navigator.clipboard.write) {
+                            // Copiar para clipboard
+                            await navigator.clipboard.write([
+                                new ClipboardItem({
+                                    'image/png': blob
+                                })
+                            ]);
+                            
+                            // Feedback de sucesso
+                            btn.textContent = '✅ Copiado!';
+                            btn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+                        } else {
+                            throw new Error('Clipboard API não suportada');
+                        }
+                        
+                    } catch (clipboardError) {
+                        console.error('Erro ao copiar:', clipboardError);
+                        
+                        // Fallback: criar download
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        const homeTeam = document.getElementById('playerHome').value || 'Home';
+                        const awayTeam = document.getElementById('playerAway').value || 'Away';
+                        
+                        link.href = url;
+                        link.download = `placar_${homeTeam}_vs_${awayTeam}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        
+                        btn.textContent = '📱 Baixado!';
+                        btn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+                    }
+                    
+                    // Restaurar botão
+                    setTimeout(() => {
+                        btn.textContent = '📋 Copiar Imagem';
+                        btn.style.background = 'linear-gradient(135deg, #00ff88, #00cc6a)';
+                        btn.disabled = false;
+                    }, 2000);
+                    
+                }, 'image/png', 0.95);
+                
+            } catch (error) {
+                console.error('Erro ao gerar imagem:', error);
+                alert('Erro ao gerar imagem. Tente novamente.');
+                btn.textContent = '📋 Copiar Imagem';
+                btn.style.background = 'linear-gradient(135deg, #00ff88, #00cc6a)';
+                btn.disabled = false;
+            }
+        }
+
+        // Auto-update com throttling
+        let updateTimeout;
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(updateDisplay, 100);
+            });
+        });
+
+        // Inicializar
+        updateDisplay();
+
+        // Adicionar animações suaves
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.placar-card').style.opacity = '0';
+            document.querySelector('.placar-card').style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                document.querySelector('.placar-card').style.transition = 'all 0.6s ease';
+                document.querySelector('.placar-card').style.opacity = '1';
+                document.querySelector('.placar-card').style.transform = 'translateY(0)';
+            }, 200);
+        });
+    </script>
+</body>
+</html>
